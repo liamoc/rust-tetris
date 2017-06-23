@@ -1,5 +1,6 @@
 use imprint::{Imprint, Cell};
 use rand::{Rand, Rng};
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Piece {
     I1,
@@ -22,21 +23,23 @@ pub enum Piece {
     Z1,
     Z2,
 }
+
 impl Rand for Piece {
-    fn rand<R : Rng>(rng : &mut R) -> Piece {
-        let x : u8 = rng.gen_range(0,7);
+    fn rand<R: Rng>(rng: &mut R) -> Piece {
+        let x: u8 = rng.gen_range(0, 7);
         match x {
-           0 => Piece::I1,
-           1 => Piece::O1,
-           2 => Piece::J1,
-           3 => Piece::L1,
-           4 => Piece::S1,
-           5 => Piece::T1,
-           6 => Piece::Z1,
-           _ => Piece::I2,
+            0 => Piece::I1,
+            1 => Piece::O1,
+            2 => Piece::J1,
+            3 => Piece::L1,
+            4 => Piece::S1,
+            5 => Piece::T1,
+            6 => Piece::Z1,
+            _ => Piece::I2,
         }
     }
 }
+
 impl Piece {
     pub fn imprint(&self) -> &Imprint {
         lazy_static! {

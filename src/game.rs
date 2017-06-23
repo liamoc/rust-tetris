@@ -87,6 +87,18 @@ impl<'a> Game<'a> {
         g.new_piece();
         Ok(g)
     }
+
+
+    fn new_piece(&mut self) {
+        self.current = self.next;
+        self.next = ::rand::random::<Piece>();
+        let x = (WIDTH as i32 - self.current.imprint().size().0 as i32) / 2;
+        let y = if self.current == Piece::I1 { 0 } else { 1 };
+        if !self.move_piece(x, y) || !self.board.all_clear(BUFFER) {
+            self.status = Status::Raising(self.board.size().1);
+        }
+    }
+
     fn new_game(&mut self) {
         self.board = Imprint::empty(WIDTH, HEIGHT + BUFFER);
         self.score_table
@@ -104,18 +116,7 @@ impl<'a> Game<'a> {
             self.board.random_line(top);
         }
     }
-    pub fn current_level(&self) -> u32 {
-        MAX_LEVEL - self.speed
-    }
-    fn new_piece(&mut self) {
-        self.current = self.next;
-        self.next = ::rand::random::<Piece>();
-        let x = (WIDTH as i32 - self.current.imprint().size().0 as i32) / 2;
-        let y = if self.current == Piece::I1 { 0 } else { 1 };
-        if !self.move_piece(x, y) || !self.board.all_clear(BUFFER) {
-            self.status = Status::Raising(self.board.size().1);
-        }
-    }
+
     fn award_points(&mut self, lines: u32) {
         let level = (MAX_LEVEL - self.speed) + 1;
         let award = match lines {
@@ -135,6 +136,7 @@ impl<'a> Game<'a> {
             false
         }
     }
+
     fn move_piece(&mut self, x: i32, y: i32) -> bool {
         let c = (x, y);
         if self.board.accepts(self.current.imprint(), c) {
@@ -144,20 +146,24 @@ impl<'a> Game<'a> {
             false
         }
     }
+
     fn hard_drop(&mut self) {
         while self.status == Status::Active {
             self.drop_rate += 1;
             self.down();
         }
     }
+
     fn rotate_l(&mut self) {
         let p = self.current.rotate_l();
         self.switch_piece(p);
     }
+
     fn rotate_r(&mut self) {
         let p = self.current.rotate_r();
         self.switch_piece(p);
     }
+
     fn check_lines(&mut self) -> bool {
         self.board.full_lines(&mut self.lines)
     }
@@ -167,6 +173,7 @@ impl<'a> Game<'a> {
         self.award_points(lines);
         self.board.clear_lines(&mut self.lines)
     }
+
     fn down(&mut self) {
         let (x, y) = self.position;
         if !self.move_piece(x, y + 1) {
@@ -187,14 +194,21 @@ impl<'a> Game<'a> {
             }
         }
     }
+
     fn left(&mut self) {
         let (x, y) = self.position;
         self.move_piece(x - 1, y);
     }
+
     fn right(&mut self) {
         let (x, y) = self.position;
         self.move_piece(x + 1, y);
     }
+
+    pub fn current_level(&self) -> u32 {
+        MAX_LEVEL - self.speed
+    }
+
     pub fn tick(&mut self) -> bool {
         match self.status {
             Status::Active => {

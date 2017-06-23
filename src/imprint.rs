@@ -6,15 +6,15 @@ pub enum Cell {
     Empty,
     Filled,
 }
+
 pub struct Imprint {
     footprint: Vec<Cell>,
     width: usize,
     height: usize,
 }
+
 impl Imprint {
-    pub fn size(&self) -> (usize, usize) {
-        return (self.width, self.height);
-    }
+
     pub fn empty(width: usize, height: usize) -> Imprint {
         Imprint {
             footprint: vec![Cell::Empty; width * height],
@@ -22,6 +22,7 @@ impl Imprint {
             height: height,
         }
     }
+
     pub fn from_footprint(print: &[&[u8]], style: Cell) -> Imprint {
         let h = print.len();
         let w = print[0].len();
@@ -48,6 +49,7 @@ impl Imprint {
         }
         all
     }
+
     fn copy_row(&mut self, src: i32, dest: usize) {
         if src == dest as i32 {
             return;
@@ -62,12 +64,18 @@ impl Imprint {
             }
         }
     }
+
+    pub fn size(&self) -> (usize, usize) {
+        return (self.width, self.height);
+    }
+
     //clear line without moving others down
     pub fn clear_line(&mut self, line: usize) {
         for x in 0..self.width {
             self[(x,line)] = Cell::Empty;
         }
     }
+
     //randomise a line
     pub fn random_line(&mut self, line: usize) {
         for x in 0..self.width {
@@ -78,6 +86,7 @@ impl Imprint {
             self[(x, line)] = Cell::Empty;
         }
     }
+
     //precondition: lines is a sorted vector of line indices.
     pub fn clear_lines(&mut self, lines: &mut Vec<usize>) {
         let mut n = lines.pop().unwrap_or(self.height);
@@ -91,6 +100,7 @@ impl Imprint {
             sy -= 1;
         }
     }
+
     pub fn accepts(&self, other: &Imprint, (x0, y0): (i32, i32)) -> bool {
         for y in 0..other.height {
             for x in 0..other.width {
@@ -108,6 +118,7 @@ impl Imprint {
         }
         return true;
     }
+
     pub fn all_clear(&self, range: usize) -> bool {
         for y in 0..range {
             for x in 0..self.width {
@@ -118,6 +129,7 @@ impl Imprint {
         }
         true
     }
+
     pub fn stamp(&mut self, other: &Imprint, (x0, y0): (i32, i32)) {
         for y in 0..other.height {
             for x in 0..other.width {
@@ -132,6 +144,7 @@ impl Imprint {
         }
     }
 }
+
 impl Index<(usize, usize)> for Imprint {
     type Output = Cell;
     fn index<'a>(&'a self, (x, y): (usize, usize)) -> &'a Cell {
