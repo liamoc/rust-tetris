@@ -1,0 +1,10 @@
+name = "Tetris"
+identifier = "net.liamoc.tetris"
+icon = ["icons/32x32.png", "icons/64x64.png","icons/128x128.png", "icons/128x128@2x.png"]
+version = "1.0.0"
+resources = []
+copyright = "Copyright (c) Liam O'Connor 2017."
+short_description = "A compact tetris game."
+long_description = """
+A clone of Nintendo-rules tetris.
+"""
