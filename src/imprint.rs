@@ -1,6 +1,11 @@
-use cell::Cell;
 use std::ops::{Index, IndexMut};
 use rand;
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Cell {
+    Empty,
+    Filled,
+}
 pub struct Imprint {
     footprint: Vec<Cell>,
     width: usize,

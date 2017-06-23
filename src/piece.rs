@@ -1,5 +1,4 @@
-use cell::{Cell};
-use imprint::{Imprint};
+use imprint::{Imprint, Cell};
 use rand::{Rand, Rng};
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Piece {
