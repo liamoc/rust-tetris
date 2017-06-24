@@ -91,9 +91,11 @@ impl<'a> Game<'a> {
 
     fn new_piece(&mut self) {
         self.current = self.next;
+        self.gravity_tick = 0;
         self.next = ::rand::random::<Piece>();
         let x = (WIDTH as i32 - self.current.imprint().size().0 as i32) / 2;
         let y = if self.current == Piece::I1 { 0 } else { 1 };
+        self.position = (x,y);
         if !self.move_piece(x, y) || !self.board.all_clear(BUFFER) {
             self.status = Status::Raising(self.board.size().1);
         }
@@ -106,7 +108,6 @@ impl<'a> Game<'a> {
             .unwrap();
         self.new_piece();
         self.new_piece();
-        self.gravity_tick = 0;
         self.points = 0;
         self.drop_rate = 0;
         self.speed = MAX_LEVEL - self.config.level;
