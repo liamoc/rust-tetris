@@ -123,12 +123,12 @@ impl DrawingContext {
         c.clear();
         c.set_draw_color(FG_COLOR);
         c.draw_rect(self.border)?;
-        c.set_draw_color(BG_COLOR);
-        self.main.fill_all_boxes(c)?;
         self.labels.draw(c, "NEXT", 0, 2)?;
         self.labels.draw(c, "POINTS", 0, self.label_positions.0)?;
         self.labels.draw(c, "TOP", 0, self.label_positions.1)?;
         self.labels.draw(c, "LEVEL", 0, self.label_positions.2)?;
+        c.set_draw_color(BG_COLOR);
+        self.main.fill_all_boxes(c)?;
         c.set_draw_color(BG_COLOR);
         self.points.draw_bg(c)?;
         c.set_draw_color(FG_COLOR);
