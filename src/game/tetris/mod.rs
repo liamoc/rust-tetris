@@ -1,7 +1,13 @@
 use std::path::Path;
 
-use score_table::ScoreTable;
-use piece::Piece;
+
+mod score_table;
+mod piece;
+
+use self::score_table::ScoreTable;
+use self::piece::Piece;
+
+use game::{Game, InputState, TickResult};
 use imprint::Imprint;
 
 pub const WIDTH: usize = 10;
@@ -17,16 +23,6 @@ pub struct Config {
     pub level: u32,
 }
 
-pub struct InputState {
-    pub escape: bool,
-    pub down: bool,
-    pub left: bool,
-    pub right: bool,
-    pub rotate_l: bool,
-    pub rotate_r: bool,
-    pub drop: bool,
-    pub skip: u32,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Status {
@@ -39,26 +35,27 @@ pub enum Status {
     Placing(Piece, i32, i32),
 }
 
-pub struct Game<'a> {
+pub struct Tetris<'a> {
     pub config: Config,
     pub status: Status,
-    pub board: Imprint,
     pub current: Piece,
     pub next: Piece,
     pub position: (i32, i32),
-    pub input: InputState,
     pub lines: Vec<usize>,
-    pub points: u32,
-    pub score_table: ScoreTable<'a>,
+    input: InputState,
+    board: Imprint,
+    points: u32,
+    score_table: ScoreTable<'a>,
     drop_rate: u32,
     gravity_tick: u32,
     speed: u32,
     remaining: i32,
 }
 
-impl<'a> Game<'a> {
+
+impl<'a> Tetris<'a> {
     pub fn new(filename: &'a Path) -> ::std::io::Result<Self> {
-        let mut g = Game {
+        let mut g = Tetris {
             config: Config { btype: 0, level: 0 },
             status: Status::Menu(0),
             board: Imprint::empty(WIDTH, HEIGHT + BUFFER),
@@ -71,16 +68,7 @@ impl<'a> Game<'a> {
             position: (0, 0),
             points: 0,
             score_table: ScoreTable::new(filename)?,
-            input: InputState {
-                skip: 0,
-                escape: false,
-                down: false,
-                left: false,
-                right: false,
-                rotate_l: false,
-                rotate_r: false,
-                drop: false,
-            },
+            input: InputState::new(),
             lines: Vec::new(),
         };
         g.new_piece();
@@ -88,14 +76,13 @@ impl<'a> Game<'a> {
         Ok(g)
     }
 
-
     fn new_piece(&mut self) {
         self.current = self.next;
         self.gravity_tick = 0;
         self.next = ::rand::random::<Piece>();
         let x = (WIDTH as i32 - self.current.imprint().size().0 as i32) / 2;
         let y = if self.current == Piece::I1 { 0 } else { 1 };
-        self.position = (x,y);
+        self.position = (x, y);
         if !self.move_piece(x, y) || !self.board.all_clear(BUFFER) {
             self.status = Status::Raising(self.board.size().1);
         }
@@ -205,12 +192,28 @@ impl<'a> Game<'a> {
         let (x, y) = self.position;
         self.move_piece(x + 1, y);
     }
+}
 
-    pub fn current_level(&self) -> u32 {
+impl<'a> Game for Tetris<'a> {
+    fn current_level(&self) -> u32 {
         MAX_LEVEL - self.speed
     }
-
-    pub fn tick(&mut self) -> bool {
+    fn score(&self) -> u32 {
+        self.points
+    }
+    fn top_score(&self) -> u32 {
+        self.score_table.get_top_score(&self.config)
+    }
+    fn board(&self) -> &Imprint {
+        &self.board
+    }
+    fn next(&self) -> Option<&Imprint> {
+        match self.status {
+            Status::Menu(_) => None,
+            _ => Some(self.next.imprint()),
+        }
+    }
+    fn tick(&mut self) -> TickResult {
         match self.status {
             Status::Active => {
                 if self.input.escape {
@@ -232,12 +235,13 @@ impl<'a> Game<'a> {
                             self.input.skip += 1;
                         }
                     }
-                    if self.input.rotate_r {
+                    if self.input.button_b {
                         self.rotate_r();
-                        self.input.rotate_r = false;
-                    } else if self.input.rotate_l {
+                        self.input.button_b = false;
+                    } else if self.input.button_a || self.input.up {
                         self.rotate_l();
-                        self.input.rotate_l = false;
+                        self.input.button_a = false;
+                        self.input.up = false;
                     }
                     if self.input.drop {
                         self.input.drop = false;
@@ -255,8 +259,8 @@ impl<'a> Game<'a> {
                 }
             }
             Status::Paused => {
-                if self.input.drop || self.input.rotate_l || self.input.rotate_r ||
-                    self.input.left || self.input.right || self.input.down
+                if self.input.drop || self.input.button_a || self.input.button_b ||
+                    self.input.left || self.input.right || self.input.down || self.input.up
                 {
                     self.status = Status::Active;
                 } else if self.input.escape {
@@ -284,7 +288,7 @@ impl<'a> Game<'a> {
                 self.status = Status::Menu((f + 1) % 70);
                 if self.input.escape {
                     self.input.escape = false;
-                    return false;
+                    return TickResult::Exit;
                 }
                 if self.input.right && self.config.btype < MAX_BTYPE {
                     self.input.right = false;
@@ -302,9 +306,8 @@ impl<'a> Game<'a> {
                     self.input.drop = false;
                     self.status = Status::Active;
                 }
-                if self.input.rotate_l || self.input.rotate_r {
-                    self.input.rotate_r = false;
-                    self.input.rotate_l = false;
+                if self.input.up {
+                    self.input.up = false;
                     if self.config.level < MAX_LEVEL - 1 {
                         self.config.level += 1;
                         self.speed = MAX_LEVEL - self.config.level;
@@ -331,6 +334,13 @@ impl<'a> Game<'a> {
                 self.new_piece();
             }
         }
-        true
+        TickResult::Continue
+    }
+    fn is_paused(&self) -> bool {
+        return self.status == Status::Paused;
+    }
+
+    fn input_state(&mut self) -> &mut InputState {
+        &mut self.input
     }
 }
