@@ -9,9 +9,9 @@ mod imprint;
 mod game;
 mod drawing;
 
-use game::tetris::{Tetris};
-use drawing::tetris;
-use drawing::GameDrawingContext;
+use game::tetris::Tetris;
+use game::snake::Snake;
+use drawing::{GameDrawingContext, tetris, snake};
 use game::{Game, TickResult};
 
 use app_dirs::{AppDataType, app_root, AppInfo};
@@ -30,15 +30,17 @@ pub fn game_loop<G: Game, C: GameDrawingContext<G>, T: RenderTarget>(
     ctx: &mut C,
     canvas: &mut Canvas<T>,
     event_pump: &mut EventPump,
-) {
+) -> TickResult {
     let mut rate_limiter = FPSManager::new();
     rate_limiter.set_framerate(FRAMERATE).unwrap();
     let mut dimensions = (canvas.viewport().width(), canvas.viewport().height());
-    'running: loop {
+    loop {
         for event in event_pump.poll_iter() {
             let input = game.input_state();
             match event {
-                Event::Quit { .. } => break 'running,
+                Event::Quit { .. } => {
+                    return TickResult::Exit;
+                }
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => input.escape = true,
                 Event::KeyUp { keycode: Some(Keycode::Escape), .. } => input.escape = false,
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => input.escape = true,
@@ -53,6 +55,10 @@ pub fn game_loop<G: Game, C: GameDrawingContext<G>, T: RenderTarget>(
                     input.right = false;
                     input.skip = 0;
                 }
+                Event::KeyDown { keycode: Some(Keycode::RightBracket), .. } => input.next = true,
+                Event::KeyUp { keycode: Some(Keycode::RightBracket), .. } => input.next = false,
+                Event::KeyDown { keycode: Some(Keycode::LeftBracket), .. } => input.prev = true,
+                Event::KeyUp { keycode: Some(Keycode::LeftBracket), .. } => input.prev = false,
                 Event::KeyDown { keycode: Some(Keycode::Down), .. } => input.down = true,
                 Event::KeyUp { keycode: Some(Keycode::Down), .. } => input.down = false,
                 Event::KeyDown { keycode: Some(Keycode::Up), .. } => input.up = true,
@@ -66,8 +72,9 @@ pub fn game_loop<G: Game, C: GameDrawingContext<G>, T: RenderTarget>(
                 _ => {}
             }
         }
-        if game.tick() != TickResult::Continue {
-            break 'running;
+        match game.tick() {
+            TickResult::Continue => {}
+            x => return x,
         }
         let new_dimensions = (canvas.viewport().width(), canvas.viewport().height());
         if dimensions != new_dimensions {
@@ -80,19 +87,50 @@ pub fn game_loop<G: Game, C: GameDrawingContext<G>, T: RenderTarget>(
 }
 
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+enum GameTag {
+    Tetris,
+    Snake,
+}
+
+static GAME_TAGS: [GameTag; 2] = [GameTag::Tetris, GameTag::Snake];
+
+const APP_INFO: AppInfo = AppInfo {
+    name: "Tetris",
+    author: "Liam O'Connor",
+};
+
+
+fn play_game<T: RenderTarget>(
+    g: GameTag,
+    canvas: &mut Canvas<T>,
+    event_pump: &mut EventPump,
+) -> TickResult {
+    let mut path = app_root(AppDataType::UserData, &APP_INFO).unwrap();
+    let dimensions = (canvas.viewport().width(), canvas.viewport().height());
+    match g {
+        GameTag::Tetris => {
+            path.push("tetris");
+            let mut game = Tetris::new(path.as_path()).unwrap();
+            let mut ctx = tetris::DrawingContext::new(dimensions.0, dimensions.1);
+            game_loop(&mut game, &mut ctx, canvas, event_pump)
+        }
+        GameTag::Snake => {
+            path.push("snake");
+            let mut game = Snake::new(path.as_path()).unwrap();
+            let mut ctx = snake::DrawingContext::new(dimensions.0, dimensions.1);
+            game_loop(&mut game, &mut ctx, canvas, event_pump)
+        }
+    }
+}
+
 
 pub fn main() {
-    const APP_INFO: AppInfo = AppInfo {
-        name: "Tetris",
-        author: "Liam O'Connor",
-    };
-    let mut path = app_root(AppDataType::UserData, &APP_INFO).unwrap();
-    path.push("tetris");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
     let mut window = video_subsystem
-        .window("Tetris", 248, 328)
+        .window("Brick Games", 248, 328)
         .position_centered()
         .resizable()
         .opengl()
@@ -102,9 +140,19 @@ pub fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut canvas = window.into_canvas().build().unwrap();
-    let dimensions = (canvas.viewport().width(), canvas.viewport().height());
+    let mut current_game: usize = 0;
+    loop {
+        match play_game(GAME_TAGS[current_game], &mut canvas, &mut event_pump) {
+            TickResult::NextGame => current_game = (current_game + 1) % GAME_TAGS.len(),
+            TickResult::PrevGame => {
+                if current_game == 0 {
+                    current_game = GAME_TAGS.len() - 1
+                } else {
+                    current_game = current_game - 1
+                }
+            }
+            _ => break,
+        }
+    }
 
-    let mut game = Tetris::new(path.as_path()).unwrap();
-    let mut ctx = tetris::DrawingContext::new(dimensions.0, dimensions.1);
-    game_loop(&mut game, &mut ctx, &mut canvas, &mut event_pump);
 }

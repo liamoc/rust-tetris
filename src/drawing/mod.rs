@@ -3,6 +3,7 @@ mod label;
 mod board;
 
 pub mod tetris;
+pub mod snake;
 
 use self::board::BoardDrawingContext;
 use self::label::LabelDrawingContext;
@@ -41,7 +42,6 @@ pub const HI_COLOR: Color = Color {
     b: 0,
     a: 255,
 };
-
 
 pub struct BaseDrawingContext {
     main: BoardDrawingContext,

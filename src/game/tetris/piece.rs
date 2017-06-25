@@ -41,124 +41,124 @@ impl Rand for Piece {
 }
 
 impl Piece {
-    pub fn imprint(&self) -> &Imprint {
+    pub fn imprint(&self) -> &Imprint<()> {
         lazy_static! {
-            static ref II1: Imprint = Imprint::from_footprint(
+            static ref II1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0, 0],
                   &[0, 0, 0, 0],
                   &[1, 1, 1, 1],
                   &[0, 0, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref II2: Imprint = Imprint::from_footprint(
+            static ref II2: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 1, 0],
                   &[0, 0, 1, 0],
                   &[0, 0, 1, 0],
                   &[0, 0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IS1: Imprint = Imprint::from_footprint(
+            static ref IS1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0],
                   &[0, 1, 1],
                   &[1, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IS2: Imprint = Imprint::from_footprint(
+            static ref IS2: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[0, 1, 1],
                   &[0, 0, 1]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IZ1: Imprint = Imprint::from_footprint(
+            static ref IZ1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0],
                   &[1, 1, 0],
                   &[0, 1, 1]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IZ2: Imprint = Imprint::from_footprint(
+            static ref IZ2: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 1],
                   &[0, 1, 1],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IO1: Imprint = Imprint::from_footprint(
+            static ref IO1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0, 0],
                   &[0, 1, 1, 0],
                   &[0, 1, 1, 0],
                   &[0, 0, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IJ1: Imprint = Imprint::from_footprint(
+            static ref IJ1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0],
                   &[1, 1, 1],
                   &[0, 0, 1]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IJ2: Imprint = Imprint::from_footprint(
+            static ref IJ2: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[0, 1, 0],
                   &[1, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IJ3: Imprint = Imprint::from_footprint(
+            static ref IJ3: Imprint<()> = Imprint::from_footprint(
                 &[&[1, 0, 0],
                   &[1, 1, 1],
                   &[0, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IJ4: Imprint = Imprint::from_footprint(
+            static ref IJ4: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 1],
                   &[0, 1, 0],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IL1: Imprint = Imprint::from_footprint(
+            static ref IL1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0],
                   &[1, 1, 1],
                   &[1, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IL2: Imprint = Imprint::from_footprint(
+            static ref IL2: Imprint<()> = Imprint::from_footprint(
                 &[&[1, 1, 0],
                   &[0, 1, 0],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IL3: Imprint = Imprint::from_footprint(
+            static ref IL3: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 1],
                   &[1, 1, 1],
                   &[0, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IL4: Imprint = Imprint::from_footprint(
+            static ref IL4: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[0, 1, 0],
                   &[0, 1, 1]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IT1: Imprint = Imprint::from_footprint(
+            static ref IT1: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 0, 0],
                   &[1, 1, 1],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IT2: Imprint = Imprint::from_footprint(
+            static ref IT2: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[1, 1, 0],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IT3: Imprint = Imprint::from_footprint(
+            static ref IT3: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[1, 1, 1],
                   &[0, 0, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
-            static ref IT4: Imprint = Imprint::from_footprint(
+            static ref IT4: Imprint<()> = Imprint::from_footprint(
                 &[&[0, 1, 0],
                   &[0, 1, 1],
                   &[0, 1, 0]],
-                Cell::Filled,
+                Cell::Filled(()),
             );
         }
         match *self {

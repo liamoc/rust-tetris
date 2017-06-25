@@ -8,7 +8,7 @@ use self::score_table::ScoreTable;
 use self::piece::Piece;
 
 use game::{Game, InputState, TickResult};
-use imprint::Imprint;
+use imprint::{Imprint, Cell};
 
 pub const WIDTH: usize = 10;
 pub const HEIGHT: usize = 20;
@@ -22,6 +22,7 @@ pub struct Config {
     pub btype: u32,
     pub level: u32,
 }
+
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -39,11 +40,11 @@ pub struct Tetris<'a> {
     pub config: Config,
     pub status: Status,
     pub current: Piece,
-    pub next: Piece,
     pub position: (i32, i32),
     pub lines: Vec<usize>,
+    next: Piece,
     input: InputState,
-    board: Imprint,
+    board: Imprint<()>,
     points: u32,
     score_table: ScoreTable<'a>,
     drop_rate: u32,
@@ -101,7 +102,7 @@ impl<'a> Tetris<'a> {
         self.remaining = (self.config.level + 1) as i32 * ADVANCE_SPEED;
         for i in 0..self.config.btype {
             let top = self.board.size().1 - 1 - i as usize;
-            self.board.random_line(top);
+            self.board.random_line(top, Cell::Filled(()));
         }
     }
 
@@ -195,6 +196,8 @@ impl<'a> Tetris<'a> {
 }
 
 impl<'a> Game for Tetris<'a> {
+    type CellData = ();
+
     fn current_level(&self) -> u32 {
         MAX_LEVEL - self.speed
     }
@@ -204,10 +207,10 @@ impl<'a> Game for Tetris<'a> {
     fn top_score(&self) -> u32 {
         self.score_table.get_top_score(&self.config)
     }
-    fn board(&self) -> &Imprint {
+    fn board(&self) -> &Imprint<()> {
         &self.board
     }
-    fn next(&self) -> Option<&Imprint> {
+    fn next(&self) -> Option<&Imprint<()>> {
         match self.status {
             Status::Menu(_) => None,
             _ => Some(self.next.imprint()),
@@ -290,10 +293,18 @@ impl<'a> Game for Tetris<'a> {
                     self.input.escape = false;
                     return TickResult::Exit;
                 }
+                if self.input.next {
+                    self.input.escape = false;
+                    return TickResult::NextGame;
+                }
+                if self.input.prev {
+                    self.input.escape = false;
+                    return TickResult::PrevGame;
+                }
                 if self.input.right && self.config.btype < MAX_BTYPE {
                     self.input.right = false;
                     let top = self.board.size().1 - 1 - self.config.btype as usize;
-                    self.board.random_line(top);
+                    self.board.random_line(top, Cell::Filled(()));
                     self.config.btype += 1;
                 }
                 if self.input.left && self.config.btype > 0 {

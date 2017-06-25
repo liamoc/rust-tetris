@@ -63,17 +63,18 @@ impl BoardDrawingContext {
     pub fn fill_all_boxes<T: RenderTarget>(&self, c: &mut Canvas<T>) -> Result<(), String> {
         self.fill_boxes(c, self.buffer_h as i32, self.board_h as i32)
     }
-    pub fn draw_imprint<T: RenderTarget>(
+
+    pub fn draw_imprint<A : Copy,T: RenderTarget>(
         &self,
         c: &mut Canvas<T>,
-        p: &Imprint,
+        p: &Imprint<A>,
         x: i32,
         y: i32,
     ) -> Result<(), String> {
         let (w, h) = p.size();
         for cy in 0..h {
             for cx in 0..w {
-                if p[(cx, cy)] != Cell::Empty {
+                if !p[(cx, cy)].is_empty() {
                     self.draw_box(c, x + cx as i32, y + cy as i32)?;
                 }
             }

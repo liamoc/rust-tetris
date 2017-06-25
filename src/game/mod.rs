@@ -1,6 +1,7 @@
 use imprint::Imprint;
 
 pub mod tetris;
+pub mod snake;
 
 pub struct InputState {
     pub escape: bool,
@@ -11,6 +12,8 @@ pub struct InputState {
     pub button_a: bool,
     pub button_b: bool,
     pub drop: bool,
+    pub next: bool,
+    pub prev: bool,
     pub skip: u32,
 }
 impl InputState {
@@ -25,6 +28,8 @@ impl InputState {
             button_b: false,
             up: false,
             drop: false,
+            next: false,
+            prev: false
         }
     }
 }
@@ -38,11 +43,12 @@ pub enum TickResult {
 }
 
 pub trait Game {
+    type CellData : Copy;
     fn current_level(&self) -> u32;
     fn score(&self) -> u32;
     fn top_score(&self) -> u32;
-    fn board(&self) -> &Imprint;
-    fn next(&self) -> Option<&Imprint>;
+    fn board(&self) -> &Imprint<Self::CellData>;
+    fn next(&self) -> Option<&Imprint<Self::CellData>>;
     fn tick(&mut self) -> TickResult;
     fn is_paused(&self) -> bool;
     fn input_state(&mut self) -> &mut InputState;
