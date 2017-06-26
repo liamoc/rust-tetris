@@ -20,7 +20,15 @@ pub struct Imprint<A> {
     width: usize,
     height: usize,
 }
-
+impl <A : Copy> Clone for Imprint<A> {
+    fn clone(&self) -> Self {
+        Imprint {
+            footprint: self.footprint.clone(),
+            width: self.width,
+            height: self.height,
+        }
+    }
+}
 impl <A : Copy> Imprint<A> {
 
     pub fn empty(width: usize, height: usize) -> Imprint<A> {

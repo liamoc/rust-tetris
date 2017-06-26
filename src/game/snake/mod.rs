@@ -96,7 +96,7 @@ impl<'a> Snake<'a> {
         let mut g = Snake {
             config: Config { field: 0, level: 9 },
             status: Status::Menu(0),
-            board: Imprint::empty(WIDTH, HEIGHT),
+            board: fields::field(0),
             movement_tick: 0,
             speed: MAX_LEVEL - 9,
             direction: Direction::Right,
@@ -113,7 +113,7 @@ impl<'a> Snake<'a> {
     }
 
     fn new_game(&mut self) {
-        self.board = Imprint::empty(WIDTH, HEIGHT);
+        self.board = fields::field(self.config.field as usize);
         self.score_table
             .update_scores(&self.config, self.points)
             .unwrap();
@@ -146,7 +146,7 @@ impl<'a> Snake<'a> {
         self.board[self.head_position] = Cell::Filled(CellData::Snake(self.direction));
         let new_loc = move_dir(self.head_position, self.direction);
         if !self.board[new_loc].is_empty() {
-            self.status = Status::Raising(self.board.size().1);
+            self.status = Status::Raising(0);
             return;
         }
         if new_loc == self.food_position {
@@ -169,6 +169,13 @@ impl<'a> Snake<'a> {
         }
     }
 
+    fn set_direction(&mut self, d1 : Direction) {
+        match self.board[self.head_position] {
+            Cell::Filled(CellData::Snake(d2)) if d1 == d2.turn_right().turn_right() => return,
+            _ => {}
+        }
+        self.direction = d1;
+    }
 }
 
 impl<'a> Game for Snake<'a> {
@@ -196,22 +203,24 @@ impl<'a> Game for Snake<'a> {
                     self.input.escape = false;
                 } else {
                     if self.input.left {
-                        self.direction = Direction::Left;
+                        self.set_direction(Direction::Left);
                     }
                     if self.input.right {
-                        self.direction = Direction::Right;
+                        self.set_direction(Direction::Right);
                     }
                     if self.input.up {
-                        self.direction = Direction::Up;
+                        self.set_direction(Direction::Up);
                     }
                     if self.input.down {
-                        self.direction = Direction::Down;
+                        self.set_direction(Direction::Down);
                     }
                     if self.input.button_a {
-                        self.direction = self.direction.turn_left();
+                        let d = self.direction.turn_left();
+                        self.set_direction(d);
                     }
                     if self.input.button_b {
-                        self.direction = self.direction.turn_right();
+                        let d = self.direction.turn_right();
+                        self.set_direction(d);
                     }
                     if self.movement_tick == 0 {
                         self.advance();
@@ -226,23 +235,23 @@ impl<'a> Game for Snake<'a> {
                     self.status = Status::Active;
                 } else if self.input.escape {
                     self.input.escape = false;
-                    self.status = Status::Raising(self.board.size().1);
+                    self.status = Status::Raising(0);
                 }
             }
 
             Status::Raising(f) => {
-                if f == 0 {
+                if f == HEIGHT {
                     self.new_game();
-                    self.status = Status::Lowering(f)
+                    self.status = Status::Lowering(HEIGHT);
                 } else {
-                    self.status = Status::Raising(f - 1);
+                    self.status = Status::Raising(f + 1);
                 }
             }
             Status::Lowering(f) => {
-                if f == self.board.size().1 {
+                if f == 0 {
                     self.status = Status::Menu(0);
                 } else {
-                    self.status = Status::Lowering(f + 1);
+                    self.status = Status::Lowering(f - 1);
                 }
             }
             Status::Menu(f) => {
@@ -260,20 +269,18 @@ impl<'a> Game for Snake<'a> {
                     return TickResult::PrevGame;
                 }
                 if self.input.right {
-                    /*
                     self.input.right = false;
-                    let top = self.board.size().1 - 1 - self.config.btype as usize;
-                    self.board.random_line(top);
-                    self.config.btype += 1;
-                    */
+                    self.config.field = (self.config.field + 1) % fields::MAX_FIELDS as u32;
+                    self.new_game();
                 }
                 if self.input.left {
-                    /* 
-                    self.input.left = false;
-                    self.config.btype -= 1;
-                    let top = self.board.size().1 - 1 - self.config.btype as usize;
-                    self.board.clear_line(top);
-                    */
+                    self.input.left= false;
+                    if self.config.field == 0 {
+                        self.config.field = fields::MAX_FIELDS as u32 - 1;
+                    } else {
+                        self.config.field -= 1;
+                    }
+                    self.new_game();
                 }
                 if self.input.drop {
                     self.input.drop = false;

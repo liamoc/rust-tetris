@@ -2,7 +2,7 @@ use sdl2::render::RenderTarget;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
 
-use imprint::{Imprint, Cell};
+use imprint::Imprint;
 
 pub struct BoardDrawingContext {
     pub offset_x: u32,
@@ -47,19 +47,30 @@ impl BoardDrawingContext {
             h - PADDING_Y * 7,
         ))
     }
+    pub fn fill_rect<T: RenderTarget>(
+        &self,
+        c: &mut Canvas<T>,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+    ) -> Result<(), String> {
+        for y in y1..y2 {
+            for x in x1..x2 {
+                self.draw_box(c,x,y)?;
+            }
+        }
+        Ok(())
+    }
     pub fn fill_boxes<T: RenderTarget>(
         &self,
         c: &mut Canvas<T>,
         y1: i32,
         y2: i32,
     ) -> Result<(), String> {
-        for y in y1..y2 {
-            for x in 0..self.board_w {
-                self.draw_box(c, x as i32, y)?;
-            }
-        }
-        Ok(())
+        self.fill_rect(c,0,y1,self.board_w as i32, y2)
     }
+
     pub fn fill_all_boxes<T: RenderTarget>(&self, c: &mut Canvas<T>) -> Result<(), String> {
         self.fill_boxes(c, self.buffer_h as i32, self.board_h as i32)
     }
