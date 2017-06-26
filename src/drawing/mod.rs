@@ -143,7 +143,7 @@ impl BaseDrawingContext {
         self.next.fill_boxes(c, 1, 3)?;
         c.set_draw_color(FG_COLOR);
         c.draw_rect(self.border)?;
-        self.labels.draw(c, "NEXT", 0, 2)?;
+        // self.labels.draw(c, "NEXT", 0, 2)?;
         self.labels.draw(c, "POINTS", 0, self.label_positions.0)?;
         self.labels.draw(c, "TOP", 0, self.label_positions.1)?;
         self.labels.draw(c, "LEVEL", 0, self.label_positions.2)?;

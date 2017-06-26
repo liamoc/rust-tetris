@@ -29,20 +29,26 @@ pub enum Status {
     Menu(u32),
 }
 
+const BONUS_TIME : u32 = 24;
+const NO_BONUS_TIME : u32 = 32;
+
 pub struct Snake<'a> {
     pub config: Config,
     pub status: Status,
     pub head_position: (usize, usize),
     pub direction: Direction,
     pub food_position: (usize,usize),
+    pub bonus_position: Option<(usize, usize)>,
+    pub anim_tick: u32,
+    movement_tick: u32,
     tail_position: (usize,usize),
     input: InputState,
     board: Imprint<CellData>,
     points: u32,
     score_table: ScoreTable<'a>,
-    movement_tick: u32,
     speed: u32,
     growth: u32,
+    pub bonus_timer: u32,
 }
 
 
@@ -103,10 +109,13 @@ impl<'a> Snake<'a> {
             head_position: (WIDTH/2, HEIGHT/2),
             tail_position: (WIDTH/2, HEIGHT/2),
             food_position: (0, 0),
+            bonus_position: None,
             points: 0,
             score_table: ScoreTable::new(filename)?,
             input: InputState::new(),
-            growth: 3
+            growth: 3,
+            bonus_timer: NO_BONUS_TIME,
+            anim_tick:0,
         };
         g.food_position = g.random_free_spot();
         Ok(g)
@@ -120,8 +129,10 @@ impl<'a> Snake<'a> {
         self.direction = Direction::Right;
         self.tail_position = (WIDTH/2,HEIGHT/2);
         self.head_position = (WIDTH/2,HEIGHT/2);
+        self.bonus_position = None;
         self.growth = 3;
         self.food_position = self.random_free_spot();
+        self.bonus_timer = NO_BONUS_TIME;
         self.points = 0;
         self.speed = MAX_LEVEL - self.config.level;
     }
@@ -129,11 +140,11 @@ impl<'a> Snake<'a> {
     fn random_free_spot(&self) -> (usize,usize){
         let x = ::rand::random::<u32>() as usize % WIDTH;
         let y = ::rand::random::<u32>() as usize % HEIGHT;
-        if !self.board[(x,y)].is_empty() || self.head_position == (x,y) {
+        if !self.board[(x,y)].is_empty() || self.head_position == (x,y) || self.food_position == (x,y) {
             for xo in 0..WIDTH {
                 for yo in 0..HEIGHT {
                     let new = ((x + xo) % WIDTH, (y + yo) % HEIGHT);
-                    if self.board[new].is_empty() && new != self.head_position {
+                    if self.board[new].is_empty() && new != self.head_position && new != self.food_position {
                         return new;
                     }
                 }
@@ -143,6 +154,19 @@ impl<'a> Snake<'a> {
     }
 
     fn advance(&mut self) {
+        self.bonus_timer -= 1;
+        if self.bonus_timer == 0 {
+            match self.bonus_position {
+                Some(_) => {
+                    self.bonus_position = None;
+                    self.bonus_timer = NO_BONUS_TIME;
+                }
+                None => {
+                    self.bonus_position = Some(self.random_free_spot());
+                    self.bonus_timer = BONUS_TIME;
+                }
+            }
+        }
         self.board[self.head_position] = Cell::Filled(CellData::Snake(self.direction));
         let new_loc = move_dir(self.head_position, self.direction);
         if !self.board[new_loc].is_empty() {
@@ -156,9 +180,11 @@ impl<'a> Snake<'a> {
         }
         self.head_position = new_loc;
         self.board[self.head_position] = Cell::Filled(CellData::Snake(self.direction));
-        // TODO
-        // check if we have hit bonus
-        // if so add to score
+        if Some(self.head_position) == self.bonus_position {
+            self.points += (self.bonus_timer * 4) + 4;
+            self.bonus_position = None;
+            self.bonus_timer = NO_BONUS_TIME;
+        }
         if self.growth > 0 {
             self.growth -= 1;
         } else {
@@ -226,6 +252,7 @@ impl<'a> Game for Snake<'a> {
                         self.advance();
                     }
                     self.movement_tick = (self.movement_tick + 1) % self.speed;
+                    self.anim_tick = (self.anim_tick + 1) % 4;
                 }
             }
             Status::Paused => {

@@ -42,6 +42,38 @@ impl<'a> GameDrawingContext<Snake<'a>> for DrawingContext {
                     g.head_position.0 as i32,
                     g.head_position.1 as i32,
                 )?;
+                match g.bonus_position {
+                    None => {},
+                    Some(p) => {
+                        c.set_draw_color(if g.anim_tick / 2 == 0 { HI_COLOR } else { FG_COLOR } );
+                        main.draw_box(c,p.0 as i32, p.1 as i32)?;
+                        c.set_draw_color(FG_COLOR);
+                        let mut x = g.bonus_timer as i32;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,0,1)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,0,2)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,1,2)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,1,1)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,2,1)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,2,2)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,3,2)? }
+                        x -= 3;
+                        if x <= 3 { c.set_draw_color(HI_COLOR); }
+                        if x > 0 { self.ctx.next.draw_box(c,3,1)? }
+                    }
+                }
             }
             Status::Raising(f) => {
                 c.set_draw_color(HI_COLOR);
