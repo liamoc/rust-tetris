@@ -4,6 +4,7 @@ mod board;
 
 pub mod tetris;
 pub mod snake;
+pub mod robots;
 
 use self::board::BoardDrawingContext;
 use self::label::LabelDrawingContext;

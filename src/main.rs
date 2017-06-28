@@ -11,7 +11,8 @@ mod drawing;
 
 use game::tetris::Tetris;
 use game::snake::Snake;
-use drawing::{GameDrawingContext, tetris, snake};
+use game::robots::Robots;
+use drawing::{GameDrawingContext, tetris, snake, robots};
 use game::{Game, TickResult};
 
 use app_dirs::{AppDataType, app_root, AppInfo};
@@ -91,9 +92,10 @@ pub fn game_loop<G: Game, C: GameDrawingContext<G>, T: RenderTarget>(
 enum GameTag {
     Tetris,
     Snake,
+    Robots
 }
 
-static GAME_TAGS: [GameTag; 2] = [GameTag::Tetris, GameTag::Snake];
+static GAME_TAGS: [GameTag; 3] = [GameTag::Tetris, GameTag::Snake, GameTag::Robots];
 
 const APP_INFO: AppInfo = AppInfo {
     name: "Tetris",
@@ -119,6 +121,12 @@ fn play_game<T: RenderTarget>(
             path.push("snake");
             let mut game = Snake::new(path.as_path()).unwrap();
             let mut ctx = snake::DrawingContext::new(dimensions.0, dimensions.1);
+            game_loop(&mut game, &mut ctx, canvas, event_pump)
+        }
+        GameTag::Robots => {
+            path.push("robots");
+            let mut game = Robots::new(path.as_path()).unwrap();
+            let mut ctx = robots::DrawingContext::new(dimensions.0, dimensions.1);
             game_loop(&mut game, &mut ctx, canvas, event_pump)
         }
     }

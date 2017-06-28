@@ -1,5 +1,6 @@
 use imprint::Imprint;
 
+pub mod robots;
 pub mod tetris;
 pub mod snake;
 
